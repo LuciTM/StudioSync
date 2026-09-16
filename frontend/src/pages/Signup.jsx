@@ -1,13 +1,17 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Loader2 } from "lucide-react";
+import { Loader2, Eye, EyeOff } from "lucide-react";
 import Button from "../components/ui/Button";
+import { register } from "../utils/auth";
 
 export default function Signup({ navigate, notify }) {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [role, setRole] = useState("renter"); // "renter" | "host"
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
@@ -19,14 +23,16 @@ export default function Signup({ navigate, notify }) {
   const passwordValid = passwordRules.length && passwordRules.special;
   const passwordTouched = password.length > 0;
 
+  const confirmTouched = confirmPassword.length > 0;
+  const passwordsMatch = password === confirmPassword;
+
   const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
   const emailTouched = email.length > 0;
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
 
-    // Normalize before validating/sending
     const normalized = {
       firstName: firstName.trim(),
       lastName: lastName.trim(),
@@ -47,18 +53,25 @@ export default function Signup({ navigate, notify }) {
       setError("Password needs at least 8 characters and 1 special character.");
       return;
     }
+    if (!passwordsMatch) {
+      setError("Passwords don't match.");
+      return;
+    }
 
     setSubmitting(true);
-
-    // TODO: replace with the real request once the backend contract is confirmed —
-    // e.g. POST /api/register with normalized { firstName, lastName, email, password, role }, then either:
-    //   - store the returned token (Sanctum token-based auth), or
-    //   - rely on the Set-Cookie response (session-based auth) and just re-fetch /api/user
-    setTimeout(() => {
-      setSubmitting(false);
+    try {
+      await register(normalized);
       notify("Account created. Welcome!");
       navigate(role === "host" ? "host" : "landing");
-    }, 700);
+    } catch (err) {
+      if (err.errors?.email) {
+        setError(err.errors.email[0]);
+      } else {
+        setError(err.message || "Couldn't create your account. Please try again.");
+      }
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -143,20 +156,32 @@ export default function Signup({ navigate, notify }) {
           )}
           {(!emailTouched || emailValid) && <div className="mb-4" />}
 
+          {/* Password */}
           <label className="text-[13px] font-medium text-[#171310] block mb-1.5">Password</label>
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="At least 8 characters"
-            className={`w-full border rounded-md px-3 py-2 text-[13.5px] focus:outline-none transition-colors ${
-              passwordTouched
-                ? passwordValid
-                  ? "border-[#16803C]/50 focus:border-[#16803C]"
-                  : "border-[#B0453B]/50 focus:border-[#B0453B]"
-                : "border-[#171310]/20 focus:border-[#9C4526]"
-            }`}
-          />
+          <div className="relative">
+            <input
+              type={showPassword ? "text" : "password"}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="At least 8 characters"
+              className={`w-full border rounded-md px-3 py-2 pr-10 text-[13.5px] focus:outline-none transition-colors ${
+                passwordTouched
+                  ? passwordValid
+                    ? "border-[#16803C]/50 focus:border-[#16803C]"
+                    : "border-[#B0453B]/50 focus:border-[#B0453B]"
+                  : "border-[#171310]/20 focus:border-[#9C4526]"
+              }`}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword((v) => !v)}
+              tabIndex={-1}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-[#171310]/40 hover:text-[#171310]/70"
+              aria-label={showPassword ? "Hide password" : "Show password"}
+            >
+              {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+            </button>
+          </div>
 
           <div className="mt-2 space-y-1">
             <p
@@ -185,6 +210,40 @@ export default function Signup({ navigate, notify }) {
             </p>
           </div>
 
+          {/* Confirm password */}
+          <label className="text-[13px] font-medium text-[#171310] block mb-1.5 mt-4">
+            Retype password
+          </label>
+          <div className="relative">
+            <input
+              type={showConfirmPassword ? "text" : "password"}
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              placeholder="Retype your password"
+              className={`w-full border rounded-md px-3 py-2 pr-10 text-[13.5px] focus:outline-none transition-colors ${
+                confirmTouched
+                  ? passwordsMatch
+                    ? "border-[#16803C]/50 focus:border-[#16803C]"
+                    : "border-[#B0453B]/50 focus:border-[#B0453B]"
+                  : "border-[#171310]/20 focus:border-[#9C4526]"
+              }`}
+            />
+            <button
+              type="button"
+              onClick={() => setShowConfirmPassword((v) => !v)}
+              tabIndex={-1}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-[#171310]/40 hover:text-[#171310]/70"
+              aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+            >
+              {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+            </button>
+          </div>
+          {confirmTouched && !passwordsMatch && (
+            <p className="text-[12px] text-[#B0453B] flex items-center gap-1.5 mt-1.5">
+              <span>✕</span> Passwords don't match
+            </p>
+          )}
+
           {error && <p className="text-[12.5px] text-[#B0453B] mt-3">{error}</p>}
 
           <Button
@@ -192,9 +251,11 @@ export default function Signup({ navigate, notify }) {
             disabled={
               submitting ||
               (emailTouched && !emailValid) ||
-              (passwordTouched && !passwordValid)
+              (passwordTouched && !passwordValid) ||
+              (confirmTouched && !passwordsMatch)
             }
-            className="w-full mt-5">
+            className="w-full mt-5"
+          >
             {submitting ? (
               <>
                 <Loader2 size={15} className="animate-spin" /> Creating account…

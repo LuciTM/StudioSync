@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Loader2 } from "lucide-react";
 import Button from "../components/ui/Button";
+import { login } from "../utils/auth";
 
 export default function Login({ navigate, notify }) {
   const [email, setEmail] = useState("");
@@ -20,7 +21,7 @@ export default function Login({ navigate, notify }) {
     emailValid &&
     passwordValid;
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
 
@@ -38,16 +39,15 @@ export default function Login({ navigate, notify }) {
     }
 
     setSubmitting(true);
-
-    // TODO: replace with the real request once the backend contract is confirmed —
-    // e.g. POST /api/login with { email: email.trim().toLowerCase(), password }, then either:
-    //   - store the returned token (Sanctum token-based auth), or
-    //   - rely on the Set-Cookie response (session-based auth) and just re-fetch /api/user
-    setTimeout(() => {
-      setSubmitting(false);
+    try {
+      await login({ email, password });
       notify("Welcome back.");
       navigate("landing");
-    }, 700);
+    } catch (err) {
+      setError(err.message || "Invalid email or password.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
