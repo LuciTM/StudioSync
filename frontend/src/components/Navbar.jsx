@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { X, Menu, LogOut } from "lucide-react";
-import Button from "./ui/Button";
 
 export default function Navbar({ view, navigate, user, onLogout }) {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -46,17 +45,15 @@ export default function Navbar({ view, navigate, user, onLogout }) {
           ))}
         </nav>
 
-        <div className="hidden md:flex items-center gap-3">
+        <div className="hidden md:flex items-center">
           {user ? (
-            <div className="flex items-center gap-3">
-              <span className="text-[13.5px] font-medium text-[#171310]/75">{user.name}</span>
+            <div className="flex items-center gap-3 pl-4 border-l border-[#171310]/10">
+              <span className="text-[13.5px] font-medium text-[#171310]/80">{user.name}</span>
               <button
                 onClick={onLogout}
-                className="text-[#171310]/45 hover:text-[#171310] p-1.5"
-                aria-label="Log out"
-                title="Log out"
+                className="text-[12.5px] font-medium text-[#171310]/50 hover:text-[#B0453B] transition-colors flex items-center gap-1"
               >
-                <LogOut size={15} />
+                <LogOut size={13} /> Log out
               </button>
             </div>
           ) : (
@@ -67,9 +64,6 @@ export default function Navbar({ view, navigate, user, onLogout }) {
               Log in
             </button>
           )}
-          <Button size="sm" onClick={() => navigate("browse")}>
-            Find a space
-          </Button>
         </div>
 
         <button className="md:hidden p-2" onClick={() => setMobileOpen((prev) => !prev)}>
@@ -96,41 +90,32 @@ export default function Navbar({ view, navigate, user, onLogout }) {
             ))}
           </nav>
 
-          {user ? (
-            <div className="flex items-center justify-between mt-2 px-1">
-              <span className="text-[14px] font-medium text-[#171310]/75">{user.name}</span>
+          <div className="mt-3 pt-3 border-t border-[#171310]/10">
+            {user ? (
+              <div className="flex items-center justify-between px-1">
+                <span className="text-[14px] font-medium text-[#171310]/80">{user.name}</span>
+                <button
+                  onClick={() => {
+                    onLogout();
+                    setMobileOpen(false);
+                  }}
+                  className="text-[13px] font-medium text-[#171310]/50 flex items-center gap-1.5"
+                >
+                  <LogOut size={14} /> Log out
+                </button>
+              </div>
+            ) : (
               <button
                 onClick={() => {
-                  onLogout();
+                  navigate("login");
                   setMobileOpen(false);
                 }}
-                className="text-[13px] font-medium text-[#171310]/55 flex items-center gap-1.5"
+                className="text-[14px] font-medium text-left py-2 px-1 text-[#171310]/65 w-full"
               >
-                <LogOut size={14} /> Log out
+                Log in
               </button>
-            </div>
-          ) : (
-            <button
-              onClick={() => {
-                navigate("login");
-                setMobileOpen(false);
-              }}
-              className="text-[14px] font-medium text-left py-2 px-1 text-[#171310]/65 w-full"
-            >
-              Log in
-            </button>
-          )}
-
-          <Button
-            size="sm"
-            className="w-full mt-2"
-            onClick={() => {
-              navigate("browse");
-              setMobileOpen(false);
-            }}
-          >
-            Find a space
-          </Button>
+            )}
+          </div>
         </div>
       )}
     </header>
