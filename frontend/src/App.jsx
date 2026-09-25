@@ -26,6 +26,9 @@ export default function App() {
   const [user, setUser] = useState(null);
   const [checkingSession, setCheckingSession] = useState(true);
 
+
+  console.log("current user:", user);
+
   // On first load, ask the backend if there's already a logged-in session
   // (so refreshing the page doesn't silently log someone out on the frontend).
   useEffect(() => {
@@ -65,13 +68,11 @@ export default function App() {
   }, []);
 
   // Called by Login/Signup once the backend confirms who they are.
-  const handleAuthenticated = useCallback(
-    (loggedInUser) => {
-      setUser(loggedInUser);
-      navigate(loggedInUser.role === "host" ? "host" : "landing");
-    },
-    [navigate]
-  );
+  const handleAuthenticated = useCallback((loggedInUser) => {
+    setUser(loggedInUser);
+    setView(loggedInUser.role === "host" ? "host" : "landing");
+    window.scrollTo?.({ top: 0, behavior: "instant" });
+  }, []);
 
   const handleLogout = useCallback(async () => {
     await logoutRequest();
@@ -106,7 +107,7 @@ export default function App() {
         {view === "mybookings" && <MyBookings bookings={bookings} navigate={navigate} />}
         {view === "host" && <HostDashboard navigate={navigate} notify={notify} />}
         {view === "login" && (
-          <Login navigate={navigate} notify={notify} onAuthenticated={handleAuthenticated} />
+        <Login navigate={navigate} notify={notify} onAuthenticated={handleAuthenticated} />
         )}
         {view === "signup" && (
           <Signup navigate={navigate} notify={notify} onAuthenticated={handleAuthenticated} />

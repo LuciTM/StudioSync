@@ -4,7 +4,7 @@ import Button from "../components/ui/Button";
 import { login } from "../utils/auth";
 import { HERO_IMAGE } from "../data/mockData";
 
-export default function Login({ navigate, notify }) {
+export default function Login({ navigate, notify, onAuthenticated }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -33,6 +33,7 @@ export default function Login({ navigate, notify }) {
 
   const canSubmit = email.trim() !== "" && password !== "" && emailValid && passwordValid;
 
+  
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
@@ -53,9 +54,9 @@ export default function Login({ navigate, notify }) {
 
     setSubmitting(true);
     try {
-      await login({ email, password });
+      const user = await login({ email, password });
       notify("Welcome back.");
-      navigate("landing");
+      onAuthenticated(user);
     } catch (err) {
       setError(err.message || "Invalid email or password.");
     } finally {

@@ -9,6 +9,7 @@ export default function Navbar({ view, navigate, user, onLogout }) {
     { id: "landing", label: "Explore" },
     { id: "browse", label: "Spaces" },
     ...(user ? [{ id: "mybookings", label: "My Bookings" }] : []),
+    ...(user?.role === "host" ? [{ id: "host", label: "Host Dashboard" }] : []),
   ];
 
   const handleNavClick = (id) => {
